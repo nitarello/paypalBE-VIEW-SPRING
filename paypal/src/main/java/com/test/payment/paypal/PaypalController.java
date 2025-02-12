@@ -1,12 +1,15 @@
 package com.test.payment.paypal;
 
+
 import com.paypal.api.payments.Links;
 import com.paypal.api.payments.Payment;
+import com.paypal.api.payments.Transaction;
 import com.paypal.base.rest.PayPalRESTException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -60,11 +63,32 @@ public class PaypalController {
     @GetMapping("/payment/success")
     public String paymentSuccess(
             @RequestParam("paymentId") String paymentId,
-            @RequestParam("PayerID") String payerId
+            @RequestParam("PayerID") String payerId,
+            Model model
     ) {
         try {
             Payment payment = paypalService.executePayment(paymentId, payerId);
             if (payment.getState().equals("approved")) {
+                double totalAmount = 0.0;
+                double singleAmount =0.0;
+                String description = "";
+                String email = "";
+                // Ciclo  invece di for (int x=0;x<payment.getTransactions().size();x++)
+                for (Transaction transaction : payment.getTransactions()) {
+                    totalAmount += Double.parseDouble(transaction.getAmount().getTotal());
+                    singleAmount = Double.parseDouble(transaction.getAmount().getTotal());
+                    description=transaction.getDescription();
+                    email=transaction.getPayee().getEmail();
+                }
+                model.addAttribute("paymentId", payment.getId());
+                model.addAttribute("state", payment.getState());
+                model.addAttribute("singleAmount", singleAmount);
+                model.addAttribute("totalAmount", totalAmount); // Totale del pagamento
+                model.addAttribute("currency", payment.getTransactions().get(0).getAmount().getCurrency());
+                model.addAttribute("payerEmail", payment.getPayer().getPayerInfo().getEmail());
+                model.addAttribute("createTime", payment.getCreateTime());
+                model.addAttribute("transactions", payment.getTransactions());
+
                 return "paymentSuccess";
             }
         } catch (PayPalRESTException e) {
