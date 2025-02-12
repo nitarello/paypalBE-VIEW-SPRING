@@ -1,0 +1,4 @@
+com\alibou\payment\paypal\PaypalController.class
+com\alibou\payment\PaypalIntegrationApplication.class
+com\alibou\payment\config\PaypalConfig.class
+com\alibou\payment\paypal\PaypalService.class
